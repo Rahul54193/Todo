@@ -10,11 +10,18 @@ Node.js installed on your machine.
 
 
 steps
+
 1.Clone the Repository:
 git clone https://github.com/rahul54193/Todo.git
+
 2.Navigate to the Project Directory:
 cd Todo
+
 3.Install Dependencies:
 npm install
+
 4.Start the Development Server:
 npm start
+
+5.Start android application
+press a
