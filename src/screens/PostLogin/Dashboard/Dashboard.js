@@ -10,7 +10,7 @@ import SharedPreference from '../../../helper/SharedPreference'
 import { resetSliceState } from '../../../store/authSlice'
 import CustomInput from '../../../components/CustomInput'
 import ButtonComp from '../../../components/ButtonComp'
-import { showError } from '../../../helper/helperFunctions'
+import { showError, showSucess } from '../../../helper/helperFunctions'
 import { Databases, Query, database } from 'appwrite'
 import { account, databases } from '../../../appwrite/AppwriteConfig'
 import { AppConst } from '../../../helper/config'
@@ -19,6 +19,8 @@ const Dashboard = () => {
   const [todo, setTodo] = useState(null)
   const [todoList, setTodoList] = useState([])
   const [logoutLoader, setLogoutLoader] = useState(false)
+  const [email,setEmail]= useState('')
+  const [toAddLoader,setTodoLoader]= useState(false)
   const dispatch = useDispatch();
   const userDetails = useSelector(store => store?.authReducer?.userDetails)
   console.log(userDetails)
@@ -33,6 +35,7 @@ const Dashboard = () => {
 
   }
   const onAddTodo = async () => {
+    setTodoLoader(true)
     if (todo) {
       const res = await databases.createDocument(AppConst.APP_WRITE_DB_ID, AppConst.APP_WRITE_COLLECTION_ID, `unique()`, {
         email: userDetails?.providerUid,
@@ -40,7 +43,10 @@ const Dashboard = () => {
       })
       setTodo(null)
       console.log(res, 'res++++')
+      setTodoLoader(false)
+      showSucess('Todo added !')
     } else {
+      setTodoLoader(false)
       showError('Please enter todo!')
     }
   }
@@ -48,10 +54,21 @@ const Dashboard = () => {
     try {
       const res = await databases.listDocuments(AppConst.APP_WRITE_DB_ID, AppConst.APP_WRITE_COLLECTION_ID, [
         Query.equal('email',userDetails?.providerUid)
-      ]).then(res => console.log(res, '++++++hhjkjl;l'))
-      console.log(res, 'list +++')
+      ]);
+      console.log(res.documents, 'list +++')
     } catch (error) {
+
       console.log(error, 'err++++')
+      showError(String(error))
+    }
+  }
+  const currentUser = async()=>{
+    try {
+      const res = await account.get('current');
+      console.log(res,'current+++')
+      setEmail(res?.email)
+    } catch (error) {
+      
     }
   }
   const deleteToDo = async (id) => {
@@ -64,8 +81,12 @@ const Dashboard = () => {
   }
   useEffect(() => {
     // deleteToDo()
-    listToDo()
-  }, [])
+    currentUser()
+    if(email!=''){
+      listToDo()
+    }
+    
+  }, [email])
   return (
     <WrapperContainer>
       <View style={{ flex: 1, padding: moderateScale(20) }}>
@@ -94,6 +115,7 @@ const Dashboard = () => {
         />
         <Spacer height={10} />
         <ButtonComp
+        loading={toAddLoader}
           style={{ width: 150 }}
           text={'Add todo'}
           onPress={onAddTodo}
